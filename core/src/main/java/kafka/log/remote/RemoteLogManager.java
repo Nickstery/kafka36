@@ -599,6 +599,13 @@ public class RemoteLogManager implements Closeable {
             File logFile = segment.log().file();
             String logFileName = logFile.getName();
 
+            // Corrupted indexes should not be uploaded to remote storage
+            // Example case: Local storage was filled, what caused index corruption
+            // We should avoid uploading such segments
+            segment.timeIndex().sanityCheck();
+            segment.offsetIndex().sanityCheck();
+            segment.txnIndex().sanityCheck();
+
             logger.info("Copying {} to remote storage.", logFileName);
             RemoteLogSegmentId id = RemoteLogSegmentId.generateNew(topicIdPartition);
 
